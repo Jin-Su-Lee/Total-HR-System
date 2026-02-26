@@ -1,0 +1,2572 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* ============ CSS 변수 ============ */
+    :root {
+      --primary: #4472C4;
+      --primary-light: #6B93D4;
+      --primary-dark: #2F5496;
+      --success: #548235;
+      --success-light: #E8F5E9;
+      --warning: #BF8F00;
+      --warning-light: #FFF8E1;
+      --danger: #C00000;
+      --danger-light: #FFEBEE;
+      --info: #0070C0;
+      --info-light: #E3F2FD;
+      --gray-50: #FAFAFA;
+      --gray-100: #F5F5F5;
+      --gray-200: #EEEEEE;
+      --gray-300: #E0E0E0;
+      --gray-400: #BDBDBD;
+      --gray-500: #9E9E9E;
+      --gray-600: #757575;
+      --gray-700: #616161;
+      --gray-800: #424242;
+      --gray-900: #212121;
+      --white: #FFFFFF;
+      --sidebar-width: 240px;
+      --header-height: 56px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --transition: all 0.2s ease;
+    }
+
+    /* ============ 리셋 & 기본 ============ */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-900);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    a { color: var(--primary); text-decoration: none; }
+    button { cursor: pointer; border: none; font-family: inherit; font-size: inherit; }
+    input, select, textarea {
+      font-family: inherit;
+      font-size: 14px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      outline: none;
+      transition: var(--transition);
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(68,114,196,0.15);
+    }
+
+    /* ============ 로딩 오버레이 ============ */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 0.3s;
+    }
+    .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loading-spinner {
+      text-align: center;
+    }
+    .loading-spinner .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid var(--gray-200);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============ Toast ============ */
+    .toast-container {
+      position: fixed;
+      top: 20px; right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      color: var(--white);
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      animation: toastIn 0.3s ease;
+      max-width: 360px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    .toast.warning { background: var(--warning); }
+    .toast.info { background: var(--info); }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+
+    /* ============ 사이드바 ============ */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--gray-900);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      transition: transform 0.3s;
+    }
+    .sidebar-header {
+      padding: 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-header h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .sidebar-header .subtitle {
+      font-size: 11px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 0;
+      overflow-y: auto;
+    }
+    .nav-section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--gray-500);
+      padding: 12px 16px 6px;
+      font-weight: 600;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      color: var(--gray-400);
+      cursor: pointer;
+      transition: var(--transition);
+      gap: 10px;
+      font-size: 13px;
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--white);
+    }
+    .nav-item.active {
+      background: rgba(68,114,196,0.15);
+      color: var(--primary-light);
+      border-left-color: var(--primary);
+      font-weight: 600;
+    }
+    .nav-item i { width: 20px; text-align: center; font-size: 15px; }
+    .nav-item .badge {
+      margin-left: auto;
+      background: var(--danger);
+      color: var(--white);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    .sidebar-footer .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-footer .user-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* ============ 메인 컨텐츠 ============ */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .page-header {
+      background: var(--white);
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .page-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+    .page-header .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .page-body {
+      padding: 24px 28px;
+      overflow-x: auto;
+    }
+    .page-section {
+      display: none;
+    }
+    .page-section.active {
+      display: block;
+    }
+
+    /* ============ 버튼 ============ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-weight: 500;
+      font-size: 13px;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .btn-primary { background: var(--primary); color: var(--white); }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-success { background: var(--success); color: var(--white); }
+    .btn-danger { background: var(--danger); color: var(--white); }
+    .btn-outline {
+      background: var(--white);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+    }
+    .btn-outline:hover { background: var(--gray-50); border-color: var(--gray-400); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-lg { padding: 10px 24px; font-size: 15px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ============ 카드 ============ */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-body { padding: 20px; }
+
+    /* ============ 통계 카드 ============ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+      border-left: 4px solid var(--primary);
+    }
+    .stat-card .stat-label {
+      font-size: 12px;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    .stat-card .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-top: 4px;
+    }
+    .stat-card.success { border-left-color: var(--success); }
+    .stat-card.warning { border-left-color: var(--warning); }
+    .stat-card.danger { border-left-color: var(--danger); }
+
+    /* ============ 테이블 ============ */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table th {
+      background: var(--gray-50);
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid var(--gray-200);
+      white-space: nowrap;
+    }
+    table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--gray-100);
+      font-size: 13px;
+    }
+    table tr:hover td { background: var(--gray-50); }
+
+    /* ============ 상태 뱃지 ============ */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .status-badge.후보등록 { background: #E8EAF6; color: #3949AB; }
+    .status-badge.서류심사 { background: #E3F2FD; color: #1565C0; }
+    .status-badge.면접 { background: #FFF3E0; color: #E65100; }
+    .status-badge.합격 { background: #E8F5E9; color: #2E7D32; }
+    .status-badge.교육 { background: #F3E5F5; color: #7B1FA2; }
+    .status-badge.근무중 { background: #E8F5E9; color: #1B5E20; }
+    .status-badge.계약종료 { background: #FFEBEE; color: #C62828; }
+    .status-badge.재계약 { background: #E0F7FA; color: #00695C; }
+
+    /* ============ D-day 뱃지 ============ */
+    .dday-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .dday-badge.danger { background: var(--danger-light); color: var(--danger); }
+    .dday-badge.warning { background: var(--warning-light); color: var(--warning); }
+    .dday-badge.info { background: var(--info-light); color: var(--info); }
+
+    /* ============ 필터 바 ============ */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .filter-bar select,
+    .filter-bar input {
+      min-width: 160px;
+    }
+    .search-input {
+      position: relative;
+    }
+    .search-input i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+    }
+    .search-input input {
+      padding-left: 34px;
+      min-width: 220px;
+    }
+
+    /* ============ 모달 ============ */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 640px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn 0.2s ease;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h3 { font-size: 18px; font-weight: 700; }
+    .modal-close {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: none;
+      color: var(--gray-500);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-close:hover { background: var(--gray-100); }
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* ============ 폼 ============ */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 4px;
+    }
+    .form-group label .required {
+      color: var(--danger);
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ============ 상세 패널 (우측 슬라이드) ============ */
+    .detail-panel {
+      position: fixed;
+      top: 0; right: -480px; bottom: 0;
+      width: 480px;
+      background: var(--white);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+      z-index: 200;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .detail-panel.open { right: 0; }
+    .detail-panel-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 199;
+      display: none;
+    }
+    .detail-panel-overlay.open { display: block; }
+    .detail-panel-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .detail-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    .detail-panel-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    /* ============ 칸반 보드 ============ */
+    .kanban-board {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 16px;
+      min-height: calc(100vh - 200px);
+    }
+    .kanban-column {
+      min-width: 220px;
+      max-width: 260px;
+      flex-shrink: 0;
+      background: var(--gray-100);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+    }
+    .kanban-column-header {
+      padding: 12px 14px;
+      font-weight: 700;
+      font-size: 13px;
+      border-bottom: 2px solid var(--gray-300);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kanban-column-header .count {
+      background: var(--gray-300);
+      color: var(--gray-700);
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .kanban-column-body {
+      flex: 1;
+      padding: 8px;
+      overflow-y: auto;
+      min-height: 100px;
+    }
+    .kanban-card {
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 8px;
+      box-shadow: var(--shadow-sm);
+      cursor: grab;
+      border-left: 3px solid var(--primary);
+      transition: var(--transition);
+    }
+    .kanban-card:hover { box-shadow: var(--shadow-md); }
+    .kanban-card.dragging { opacity: 0.5; }
+    .kanban-card .card-name {
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .kanban-card .card-info {
+      font-size: 11px;
+      color: var(--gray-600);
+    }
+    .kanban-column.drag-over {
+      background: rgba(68,114,196,0.08);
+    }
+
+    /* ============ 알림 배너 ============ */
+    .alert-banner {
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .alert-banner.info { background: var(--info-light); color: var(--info); border: 1px solid rgba(0,112,192,0.2); }
+    .alert-banner.warning { background: var(--warning-light); color: #8D6E00; border: 1px solid rgba(191,143,0,0.2); }
+    .alert-banner.danger { background: var(--danger-light); color: var(--danger); border: 1px solid rgba(192,0,0,0.2); }
+
+    /* ============ 탭 ============ */
+    .tab-bar {
+      display: flex;
+      border-bottom: 2px solid var(--gray-200);
+      margin-bottom: 20px;
+    }
+    .tab-item {
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-600);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: var(--transition);
+    }
+    .tab-item:hover { color: var(--gray-900); }
+    .tab-item.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* ============ Empty State ============ */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--gray-500);
+    }
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: var(--gray-300);
+    }
+    .empty-state h3 {
+      font-size: 16px;
+      color: var(--gray-700);
+      margin-bottom: 8px;
+    }
+
+    /* ============ 반응형 ============ */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+      .form-row { grid-template-columns: 1fr; }
+      .detail-panel { width: 100%; right: -100%; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      #alertGridSection { grid-template-columns: 1fr !important; }
+      .kanban-board { flex-direction: column; }
+      .kanban-column { min-width: 100%; max-width: 100%; }
+    }
+    /* 이력서 업로드 */
+    .resume-upload-area { border:2px dashed var(--gray-300); border-radius:var(--radius-md); padding:16px; text-align:center; cursor:pointer; transition:var(--transition); background:var(--gray-50); }
+    .resume-upload-area:hover { border-color:var(--primary); background:rgba(68,114,196,0.05); }
+    .resume-upload-area.has-file { border-color:var(--success); background:#f0fdf4; }
+    .resume-upload-icon { font-size:28px; color:var(--gray-400); margin-bottom:4px; }
+    .resume-upload-area.has-file .resume-upload-icon { color:var(--success); }
+    .resume-upload-text { font-size:13px; color:var(--gray-600); }
+    .resume-upload-hint { font-size:11px; color:var(--gray-400); margin-top:2px; }
+    .resume-parsing-status { padding:8px 12px; border-radius:var(--radius-sm); font-size:12px; margin-top:8px; display:none; align-items:center; gap:8px; }
+    .resume-parsing-status.loading { display:flex; background:#eff6ff; color:#2563eb; }
+    .resume-parsing-status.done { display:flex; background:#f0fdf4; color:#16a34a; }
+    .resume-parsing-status.error { display:flex; background:#fef2f2; color:#dc2626; }
+  </style>
+</head>
+<body>
+
+  <!-- 로딩 오버레이 -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>데이터를 불러오는 중...</p>
+    </div>
+  </div>
+
+  <!-- Toast 컨테이너 -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- 사이드바 -->
+  <div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <h1>스텝관리</h1>
+      <div class="subtitle">지수회계법인 환급사업부</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">메인</div>
+      <div class="nav-item active" onclick="navigateTo('dashboard')">
+        <i class="fas fa-chart-pie"></i>
+        <span>대시보드</span>
+      </div>
+      <div class="nav-item" onclick="navigateTo('staffList')">
+        <i class="fas fa-users"></i>
+        <span>스텝 목록</span>
+      </div>
+      <div class="nav-item" onclick="navigateTo('kanban')">
+        <i class="fas fa-columns"></i>
+        <span>칸반 보드</span>
+      </div>
+
+      <div class="nav-section-title">관리</div>
+      <div class="nav-item" onclick="navigateTo('evaluation')">
+        <i class="fas fa-star"></i>
+        <span>성과평가</span>
+      </div>
+      <div class="nav-item" onclick="navigateTo('contract')">
+        <i class="fas fa-file-contract"></i>
+        <span>계약이력</span>
+      </div>
+      <div class="nav-item" id="navSettings" onclick="navigateTo('settings')" style="display:none;">
+        <i class="fas fa-cog"></i>
+        <span>설정</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar"></div>
+        <div>
+          <div style="color:var(--gray-300);font-weight:600;" id="userNameDisplay"></div>
+          <div style="color:var(--gray-500);font-size:11px;" id="userRoleDisplay"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 컨텐츠 -->
+  <div class="main-content">
+
+    <!-- ===== 대시보드 페이지 ===== -->
+    <div id="page-dashboard" class="page-section active">
+      <div class="page-header">
+        <h2>대시보드</h2>
+        <div class="header-actions">
+          <button class="btn btn-outline btn-sm" onclick="refreshData()">
+            <i class="fas fa-sync-alt"></i> 새로고침
+          </button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div id="alertBanner"></div>
+        <div id="statsGrid" class="stats-grid"></div>
+        <div id="orgStatsSection"></div>
+        <div id="orgStaffListArea"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;" id="alertGridSection">
+          <div class="card">
+            <div class="card-header">
+              <h3 style="font-size:15px;font-weight:600;"><i class="fas fa-clock" style="color:var(--warning);margin-right:6px;"></i>계약만료 임박</h3>
+            </div>
+            <div class="card-body">
+              <div id="ddayAlertList"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 style="font-size:15px;font-weight:600;"><i class="fas fa-clipboard-check" style="color:var(--info);margin-right:6px;"></i>성과평가 필요</h3>
+            </div>
+            <div class="card-body">
+              <div id="evalNeededList"></div>
+            </div>
+          </div>
+        </div>
+        <div id="attendanceRateSection"></div>
+      </div>
+    </div>
+
+    <!-- ===== 스텝 목록 페이지 ===== -->
+    <div id="page-staffList" class="page-section">
+      <div class="page-header">
+        <h2>스텝 목록</h2>
+        <div class="header-actions">
+          <button class="btn btn-outline btn-sm" id="viewToggleBtn" onclick="toggleStaffView()">
+            <i class="fas fa-th-large"></i> 카드형
+          </button>
+          <button class="btn btn-primary" onclick="openAddStaffModal()">
+            <i class="fas fa-plus"></i> 스텝 등록
+          </button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div class="filter-bar">
+          <select id="filterStatus" onchange="applyFilters()">
+            <option value="">전체 상태</option>
+          </select>
+          <select id="filterOrg" onchange="applyFilters()">
+            <option value="">전체 조직</option>
+          </select>
+          <div class="search-input">
+            <i class="fas fa-search"></i>
+            <input type="text" id="filterKeyword" placeholder="이름, 연락처, 이메일 검색..." oninput="applyFilters()">
+          </div>
+          <span id="staffCountLabel" style="color:var(--gray-500);font-size:13px;margin-left:auto;"></span>
+        </div>
+        <div id="staffListContainer"></div>
+      </div>
+    </div>
+
+    <!-- ===== 칸반 보드 페이지 ===== -->
+    <div id="page-kanban" class="page-section">
+      <div class="page-header">
+        <h2>칸반 보드</h2>
+        <div class="header-actions">
+          <button class="btn btn-primary" onclick="openAddStaffModal()">
+            <i class="fas fa-plus"></i> 스텝 등록
+          </button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div id="kanbanBoard" class="kanban-board"></div>
+      </div>
+    </div>
+
+    <!-- ===== 성과평가 페이지 ===== -->
+    <div id="page-evaluation" class="page-section">
+      <div class="page-header">
+        <h2>성과평가</h2>
+        <div class="header-actions">
+          <button class="btn btn-primary" onclick="openAddEvalModal()">
+            <i class="fas fa-plus"></i> 평가 등록
+          </button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div id="evaluationContainer"></div>
+      </div>
+    </div>
+
+    <!-- ===== 계약이력 페이지 ===== -->
+    <div id="page-contract" class="page-section">
+      <div class="page-header">
+        <h2>계약이력</h2>
+      </div>
+      <div class="page-body">
+        <div id="contractContainer"></div>
+      </div>
+    </div>
+
+    <!-- ===== 설정 페이지 ===== -->
+    <div id="page-settings" class="page-section">
+      <div class="page-header">
+        <h2>설정</h2>
+      </div>
+      <div class="page-body">
+        <div id="settingsContainer">
+          <div class="empty-state">
+            <i class="fas fa-cog"></i>
+            <h3>시스템 설정</h3>
+            <p>관리자만 접근할 수 있습니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 스텝 등록/수정 모달 ===== -->
+  <div id="staffModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="staffModalTitle">스텝 등록</h3>
+        <button class="modal-close" onclick="closeStaffModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="staffFormId">
+        <!-- 이력서 업로드 -->
+        <div class="form-group" style="margin-bottom:16px;">
+          <label>PDF 이력서 업로드</label>
+          <div class="resume-upload-area" id="resumeUploadArea" onclick="document.getElementById('resumeFileInput').click()">
+            <div class="resume-upload-icon"><i class="fas fa-file-pdf"></i></div>
+            <div class="resume-upload-text" id="resumeUploadText">PDF 파일을 클릭하여 선택하세요</div>
+            <div class="resume-upload-hint">최대 10MB / PDF만 / 업로드 시 정보 자동 추출</div>
+          </div>
+          <input type="file" id="resumeFileInput" accept=".pdf,application/pdf" style="display:none" onchange="onResumeFileSelected(this)">
+          <div class="resume-parsing-status" id="resumeParsingStatus"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>이름 <span class="required">*</span></label>
+            <input type="text" id="staffFormName" placeholder="이름 입력">
+          </div>
+          <div class="form-group">
+            <label>연락처</label>
+            <input type="tel" id="staffFormPhone" placeholder="010-0000-0000">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>이메일</label>
+            <input type="email" id="staffFormEmail" placeholder="email@example.com">
+          </div>
+          <div class="form-group">
+            <label>생년월일</label>
+            <input type="date" id="staffFormBirthDate">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>성별</label>
+            <select id="staffFormGender">
+              <option value="">선택</option>
+              <option value="남">남</option>
+              <option value="여">여</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>지원경로</label>
+            <select id="staffFormSource">
+              <option value="">선택</option>
+              <option value="알바몬">알바몬</option>
+              <option value="알바천국">알바천국</option>
+              <option value="지인소개">지인소개</option>
+              <option value="직접지원">직접지원</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>주소</label>
+          <input type="text" id="staffFormAddress" placeholder="주소 입력">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>조직</label>
+            <input type="text" id="staffFormOrg" placeholder="조직/팀">
+          </div>
+          <div class="form-group">
+            <label>직무</label>
+            <input type="text" id="staffFormDuty" placeholder="직무">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>계약시작일</label>
+            <input type="date" id="staffFormContractStart">
+          </div>
+          <div class="form-group">
+            <label>계약종료일</label>
+            <input type="date" id="staffFormContractEnd">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>급여형태</label>
+            <select id="staffFormPayType">
+              <option value="">선택</option>
+              <option value="일급">일급</option>
+              <option value="시급">시급</option>
+              <option value="월급">월급</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>급여액</label>
+            <input type="number" id="staffFormPayAmount" placeholder="금액">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>은행명</label>
+            <input type="text" id="staffFormBankName" placeholder="은행명">
+          </div>
+          <div class="form-group">
+            <label>계좌번호</label>
+            <input type="text" id="staffFormBankAccount" placeholder="계좌번호">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>비고</label>
+          <textarea id="staffFormMemo" rows="2" placeholder="기타 메모"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeStaffModal()">취소</button>
+        <button class="btn btn-primary" id="staffFormSubmitBtn" onclick="submitStaffForm()">
+          <i class="fas fa-save"></i> 저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 성과평가 등록 모달 ===== -->
+  <div id="evalModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>성과평가 등록</h3>
+        <button class="modal-close" onclick="closeEvalModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>스텝 선택 <span class="required">*</span></label>
+            <select id="evalFormStaff" onchange="onEvalStaffSelect()">
+              <option value="">선택</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>평가기간</label>
+            <input type="text" id="evalFormPeriod" placeholder="예: 2026-01 ~ 2026-02">
+          </div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:12px;font-weight:600;color:var(--gray-700);display:block;margin-bottom:8px;">평가 항목 (1~5점)</label>
+          <div id="evalCriteriaFields">
+            <!-- 동적 생성: buildEvalCriteriaFields_() -->
+          </div>
+        </div>
+        <div class="form-group">
+          <label>코멘트</label>
+          <textarea id="evalFormComment" rows="3" placeholder="평가 코멘트 입력"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeEvalModal()">취소</button>
+        <button class="btn btn-primary" onclick="submitEvalForm()">
+          <i class="fas fa-save"></i> 저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 상세 패널 ===== -->
+  <div id="detailPanelOverlay" class="detail-panel-overlay" onclick="closeDetailPanel()"></div>
+  <div id="detailPanel" class="detail-panel">
+    <div class="detail-panel-header">
+      <h3 id="detailPanelTitle">스텝 상세</h3>
+      <button class="modal-close" onclick="closeDetailPanel()">&times;</button>
+    </div>
+    <div class="detail-panel-body" id="detailPanelBody"></div>
+    <div class="detail-panel-footer" id="detailPanelFooter"></div>
+  </div>
+
+  <!-- ===== 모바일 메뉴 버튼 ===== -->
+  <button id="mobileMenuBtn" style="display:none;position:fixed;bottom:20px;left:20px;z-index:101;width:48px;height:48px;border-radius:50%;background:var(--primary);color:var(--white);font-size:20px;box-shadow:var(--shadow-md);" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </button>
+
+<script>
+// ============ 템플릿 변수 ============
+var userEmail = '<?= userEmail ?>';
+var userRole = '<?= userRole ?>';
+var userName = '<?= userName ?>';
+var userOrg = '<?= userOrg ?>';
+
+// ============ 전역 변수 ============
+var allStaffList = [];
+var filteredStaffList = [];
+var statusCounts = {};
+var statusList = [];
+var statusTransitions = {};
+var ddayAlerts = [];
+var currentPage = 'dashboard';
+var _resumeBase64 = null;
+var _resumeFileName = null;
+var _resumeUrl = null;
+var staffViewMode = 'table'; // 'table' | 'card'
+var _cache = {};
+
+// ============ 초기화 ============
+document.addEventListener('DOMContentLoaded', function() {
+  // 사용자 정보 표시
+  document.getElementById('userAvatar').textContent = userName ? userName.charAt(0) : '?';
+  document.getElementById('userNameDisplay').textContent = userName || userEmail;
+  document.getElementById('userRoleDisplay').textContent = userRole + (userOrg ? ' / ' + userOrg : '');
+
+  // 최고관리자만 설정 메뉴 표시
+  if (userRole === '최고관리자') {
+    document.getElementById('navSettings').style.display = '';
+  }
+
+  // 모바일 감지
+  if (window.innerWidth <= 768) {
+    document.getElementById('mobileMenuBtn').style.display = 'flex';
+  }
+
+  // 초기 데이터 로드
+  loadInitialData();
+});
+
+function loadInitialData() {
+  showLoading();
+  google.script.run
+    .withSuccessHandler(function(result) {
+      hideLoading();
+      if (result.success) {
+        allStaffList = result.data.staffList || [];
+        statusCounts = result.data.statusCounts || {};
+        statusList = result.data.statusList || [];
+        statusTransitions = result.data.statusTransitions || {};
+        ddayAlerts = result.data.alerts || [];
+
+        populateFilterOptions();
+        renderDashboard();
+        applyFilters();
+      } else {
+        showToast(result.message || '데이터 로드 실패', 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      hideLoading();
+      showToast('서버 오류: ' + err.message, 'error');
+    })
+    .getInitialData();
+}
+
+function refreshData() {
+  _dashboardData = null;
+  loadInitialData();
+  showToast('데이터를 새로고침했습니다.', 'info');
+}
+
+// ============ SPA 네비게이션 ============
+function navigateTo(page) {
+  currentPage = page;
+
+  // 페이지 섹션 전환
+  var sections = document.querySelectorAll('.page-section');
+  for (var i = 0; i < sections.length; i++) {
+    sections[i].classList.remove('active');
+  }
+  var target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+
+  // 네비 활성화
+  var navItems = document.querySelectorAll('.nav-item');
+  for (var j = 0; j < navItems.length; j++) {
+    navItems[j].classList.remove('active');
+    var onclick = navItems[j].getAttribute('onclick');
+    if (onclick && onclick.indexOf("'" + page + "'") > -1) {
+      navItems[j].classList.add('active');
+    }
+  }
+
+  // 페이지별 렌더
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'staffList') renderStaffList();
+  if (page === 'kanban') renderKanban();
+  if (page === 'evaluation') renderEvaluation();
+  if (page === 'contract') renderContract();
+  if (page === 'settings') renderSettings();
+
+  // 모바일 사이드바 닫기
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ============ 대시보드 ============
+var _dashboardData = null;
+
+function renderDashboard() {
+  // 1단계: 즉시 표시 (초기 데이터)
+  var total = allStaffList.length;
+  var working = statusCounts['근무중'] || 0;
+  var alertCount = ddayAlerts.length;
+
+  var statsHtml = '' +
+    '<div class="stat-card">' +
+      '<div class="stat-label">전체 스텝</div>' +
+      '<div class="stat-value">' + total + '</div>' +
+    '</div>' +
+    '<div class="stat-card success">' +
+      '<div class="stat-label">근무중</div>' +
+      '<div class="stat-value">' + working + '</div>' +
+    '</div>' +
+    '<div class="stat-card danger">' +
+      '<div class="stat-label">만료 임박</div>' +
+      '<div class="stat-value">' + alertCount + '</div>' +
+    '</div>';
+  document.getElementById('statsGrid').innerHTML = statsHtml;
+
+  // 알림 배너
+  var bannerHtml = '';
+  if (alertCount > 0) {
+    bannerHtml = '<div class="alert-banner warning">' +
+      '<i class="fas fa-exclamation-triangle"></i>' +
+      '<span>계약만료 임박 스텝이 <strong>' + alertCount + '명</strong> 있습니다. 확인해주세요.</span>' +
+    '</div>';
+  }
+  document.getElementById('alertBanner').innerHTML = bannerHtml;
+
+  // D-day 기본 표시
+  renderDdayAlertList_(ddayAlerts);
+
+  // 2단계: 상세 데이터 비동기 로드
+  if (_dashboardData) {
+    renderDashboardDetail_(_dashboardData);
+  } else {
+    document.getElementById('orgStatsSection').innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400);"><i class="fas fa-spinner fa-spin"></i> 팀별 현황 로딩 중...</div>';
+    document.getElementById('evalNeededList').innerHTML = '<div style="text-align:center;padding:16px;color:var(--gray-400);font-size:13px;"><i class="fas fa-spinner fa-spin"></i></div>';
+    document.getElementById('attendanceRateSection').innerHTML = '';
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (result.success) {
+          _dashboardData = result.data;
+          // 상위 카드 갱신 (권한 필터 반영)
+          document.getElementById('statsGrid').innerHTML =
+            '<div class="stat-card"><div class="stat-label">전체 스텝</div><div class="stat-value">' + result.data.total + '</div></div>' +
+            '<div class="stat-card success"><div class="stat-label">근무중</div><div class="stat-value">' + result.data.working + '</div></div>' +
+            '<div class="stat-card danger"><div class="stat-label">만료 임박</div><div class="stat-value">' + result.data.alertCount + '</div></div>';
+          if (result.data.alerts) renderDdayAlertList_(result.data.alerts);
+          renderDashboardDetail_(result.data);
+        }
+      })
+      .withFailureHandler(function(err) {
+        document.getElementById('orgStatsSection').innerHTML = '<p style="color:var(--gray-400);padding:12px;font-size:13px;">상세 데이터 로드 실패</p>';
+      })
+      .getDashboardData();
+  }
+}
+
+function renderDdayAlertList_(alerts) {
+  var ddayHtml = '';
+  if (!alerts || alerts.length === 0) {
+    ddayHtml = '<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px;"><i class="fas fa-check-circle"></i> 임박 스텝 없음</div>';
+  } else {
+    ddayHtml = '<div class="table-wrapper"><table><thead><tr><th>이름</th><th>조직</th><th>계약종료일</th><th>D-day</th><th></th></tr></thead><tbody>';
+    for (var i = 0; i < alerts.length; i++) {
+      var a = alerts[i];
+      ddayHtml += '<tr style="cursor:pointer;" onclick="openDetailPanel(\'' + a.staffId + '\')">' +
+        '<td><strong>' + a.staffName + '</strong></td>' +
+        '<td>' + (a.org || '-') + '</td>' +
+        '<td>' + a.contractEnd + '</td>' +
+        '<td><span class="dday-badge ' + a.level + '">D-' + a.dday + '</span></td>' +
+        '<td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openDetailPanel(\'' + a.staffId + '\')">상세</button></td>' +
+      '</tr>';
+    }
+    ddayHtml += '</tbody></table></div>';
+  }
+  document.getElementById('ddayAlertList').innerHTML = ddayHtml;
+}
+
+function renderDashboardDetail_(data) {
+  // 팀별 현황
+  renderOrgStats_(data.byOrg, data.byOrgStatus);
+  // 성과평가 필요
+  renderEvalNeededList_(data.evalNeeded);
+  // 출근율
+  renderAttendanceRate_(data.attendanceRate);
+}
+
+function renderOrgStats_(byOrg, byOrgStatus) {
+  var section = document.getElementById('orgStatsSection');
+  var orgs = Object.keys(byOrg).sort();
+  if (orgs.length === 0) {
+    section.innerHTML = '';
+    return;
+  }
+
+  var html = '<div class="card" style="margin-bottom:24px;">' +
+    '<div class="card-header"><h3 style="font-size:15px;font-weight:600;margin:0;"><i class="fas fa-building" style="color:var(--primary);margin-right:6px;"></i>팀별 현황</h3></div>' +
+    '<div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">';
+
+  for (var i = 0; i < orgs.length; i++) {
+    var org = orgs[i];
+    var count = byOrg[org];
+    var statusMap = byOrgStatus[org] || {};
+    var wk = statusMap['근무중'] || 0;
+    var edu = statusMap['교육'] || 0;
+    var other = count - wk - edu;
+
+    html += '<div onclick="showOrgStaffList(\'' + org + '\')" style="background:var(--gray-50);border-radius:var(--radius-md);padding:14px;cursor:pointer;border:1px solid var(--gray-200);transition:var(--transition);" onmouseover="this.style.borderColor=\'var(--primary)\';this.style.boxShadow=\'var(--shadow-sm)\'" onmouseout="this.style.borderColor=\'var(--gray-200)\';this.style.boxShadow=\'none\'">' +
+      '<div style="font-weight:700;font-size:14px;color:var(--gray-800);margin-bottom:8px;">' + org + '</div>' +
+      '<div style="font-size:24px;font-weight:700;color:var(--primary);margin-bottom:6px;">' + count + '<span style="font-size:12px;color:var(--gray-500);font-weight:400;">명</span></div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+    if (wk > 0) html += '<span style="font-size:11px;background:var(--success-light);color:var(--success);padding:1px 6px;border-radius:4px;">근무 ' + wk + '</span>';
+    if (edu > 0) html += '<span style="font-size:11px;background:var(--warning-light);color:var(--warning);padding:1px 6px;border-radius:4px;">교육 ' + edu + '</span>';
+    if (other > 0) html += '<span style="font-size:11px;background:var(--gray-200);color:var(--gray-600);padding:1px 6px;border-radius:4px;">기타 ' + other + '</span>';
+    html += '</div></div>';
+  }
+
+  html += '</div></div>';
+  section.innerHTML = html;
+}
+
+function showOrgStaffList(org) {
+  var area = document.getElementById('orgStaffListArea');
+  var staffInOrg = allStaffList.filter(function(s) { return s.org === org; });
+
+  if (staffInOrg.length === 0) {
+    area.innerHTML = '<div class="card" style="margin-bottom:24px;"><div class="card-body"><p style="text-align:center;color:var(--gray-400);">' + org + ' 소속 스텝이 없습니다.</p></div></div>';
+    return;
+  }
+
+  var html = '<div class="card" style="margin-bottom:24px;">' +
+    '<div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">' +
+    '<h3 style="font-size:15px;font-weight:600;margin:0;"><i class="fas fa-users" style="color:var(--primary);margin-right:6px;"></i>' + org + ' 스텝 목록 (' + staffInOrg.length + '명)</h3>' +
+    '<button class="btn btn-outline btn-sm" onclick="document.getElementById(\'orgStaffListArea\').innerHTML=\'\'"><i class="fas fa-times"></i> 닫기</button>' +
+    '</div>' +
+    '<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>이름</th><th>상태</th><th>연락처</th><th>계약종료일</th><th></th></tr></thead><tbody>';
+
+  for (var i = 0; i < staffInOrg.length; i++) {
+    var s = staffInOrg[i];
+    var statusColor = s.status === '근무중' ? 'var(--success)' : s.status === '교육' ? 'var(--warning)' : 'var(--gray-500)';
+    html += '<tr style="cursor:pointer;" onclick="openDetailPanel(\'' + s.id + '\')">' +
+      '<td><strong>' + s.name + '</strong></td>' +
+      '<td><span style="color:' + statusColor + ';font-weight:600;font-size:12px;">' + s.status + '</span></td>' +
+      '<td>' + (s.phone || '-') + '</td>' +
+      '<td>' + (s.contractEnd || '-') + '</td>' +
+      '<td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openDetailPanel(\'' + s.id + '\')">상세</button></td>' +
+    '</tr>';
+  }
+
+  html += '</tbody></table></div></div>';
+  area.innerHTML = html;
+  area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderEvalNeededList_(evalNeeded) {
+  var container = document.getElementById('evalNeededList');
+  if (!evalNeeded || evalNeeded.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray-400);font-size:13px;"><i class="fas fa-check-circle"></i> 평가 필요 스텝 없음</div>';
+    return;
+  }
+
+  var html = '<div class="table-wrapper"><table><thead><tr><th>이름</th><th>조직</th><th>최근 평가일</th><th>경과</th></tr></thead><tbody>';
+  for (var i = 0; i < evalNeeded.length; i++) {
+    var ev = evalNeeded[i];
+    var daysText = ev.daysSince === -1 ? '<span style="color:var(--danger);font-weight:700;">미평가</span>' :
+      '<span style="color:' + (ev.daysSince >= 90 ? 'var(--danger)' : 'var(--warning)') + ';font-weight:600;">' + ev.daysSince + '일</span>';
+    html += '<tr style="cursor:pointer;" onclick="openDetailPanel(\'' + ev.staffId + '\')">' +
+      '<td><strong>' + ev.staffName + '</strong></td>' +
+      '<td>' + (ev.org || '-') + '</td>' +
+      '<td>' + ev.lastEvalDate + '</td>' +
+      '<td>' + daysText + '</td>' +
+    '</tr>';
+  }
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+function renderAttendanceRate_(attendanceRate) {
+  var section = document.getElementById('attendanceRateSection');
+  if (!attendanceRate || Object.keys(attendanceRate).length <= 1) {
+    section.innerHTML = '';
+    return;
+  }
+
+  var overall = attendanceRate.overall || 0;
+  var orgs = Object.keys(attendanceRate).filter(function(k) { return k !== 'overall'; }).sort();
+
+  var html = '<div class="card" style="margin-bottom:24px;">' +
+    '<div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">' +
+    '<h3 style="font-size:15px;font-weight:600;margin:0;"><i class="fas fa-chart-bar" style="color:var(--info);margin-right:6px;"></i>이번 달 출근율</h3>' +
+    '<span style="font-size:14px;font-weight:700;color:var(--primary);">전체 ' + overall + '%</span>' +
+    '</div>' +
+    '<div style="padding:16px;">';
+
+  for (var i = 0; i < orgs.length; i++) {
+    var org = orgs[i];
+    var rate = attendanceRate[org] || 0;
+    var barColor = rate >= 90 ? 'var(--success)' : rate >= 70 ? 'var(--warning)' : 'var(--danger)';
+    html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">' +
+      '<span style="flex:0 0 100px;font-size:13px;font-weight:600;color:var(--gray-700);">' + org + '</span>' +
+      '<div style="flex:1;height:20px;background:var(--gray-100);border-radius:10px;overflow:hidden;">' +
+      '<div style="height:100%;width:' + Math.min(rate, 100) + '%;background:' + barColor + ';border-radius:10px;transition:width 0.5s ease;"></div>' +
+      '</div>' +
+      '<span style="flex:0 0 50px;text-align:right;font-size:13px;font-weight:700;color:var(--gray-800);">' + rate + '%</span>' +
+    '</div>';
+  }
+
+  html += '</div></div>';
+  section.innerHTML = html;
+}
+
+function refreshDashboard() {
+  _dashboardData = null;
+  renderDashboard();
+}
+
+// ============ 필터 ============
+function populateFilterOptions() {
+  var statusSelect = document.getElementById('filterStatus');
+  statusSelect.innerHTML = '<option value="">전체 상태</option>';
+  for (var i = 0; i < statusList.length; i++) {
+    statusSelect.innerHTML += '<option value="' + statusList[i] + '">' + statusList[i] + '</option>';
+  }
+
+  // 조직 목록 추출
+  var orgs = {};
+  for (var j = 0; j < allStaffList.length; j++) {
+    if (allStaffList[j].org) orgs[allStaffList[j].org] = true;
+  }
+  var orgSelect = document.getElementById('filterOrg');
+  orgSelect.innerHTML = '<option value="">전체 조직</option>';
+  var orgKeys = Object.keys(orgs).sort();
+  for (var k = 0; k < orgKeys.length; k++) {
+    orgSelect.innerHTML += '<option value="' + orgKeys[k] + '">' + orgKeys[k] + '</option>';
+  }
+}
+
+function applyFilters() {
+  var status = document.getElementById('filterStatus').value;
+  var org = document.getElementById('filterOrg').value;
+  var keyword = document.getElementById('filterKeyword').value.toLowerCase();
+
+  filteredStaffList = allStaffList.filter(function(s) {
+    if (status && s.status !== status) return false;
+    if (org && s.org !== org) return false;
+    if (keyword) {
+      var searchable = (s.name + s.phone + s.email + s.org).toLowerCase();
+      if (searchable.indexOf(keyword) === -1) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('staffCountLabel').textContent = '검색 결과: ' + filteredStaffList.length + '명';
+  renderStaffList();
+}
+
+// ============ 스텝 목록 ============
+function renderStaffList() {
+  var container = document.getElementById('staffListContainer');
+  if (filteredStaffList.length === 0) {
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><h3>스텝이 없습니다</h3><p>새 스텝을 등록해보세요.</p></div>';
+    return;
+  }
+
+  if (staffViewMode === 'table') {
+    renderStaffTable(container);
+  } else {
+    renderStaffCards(container);
+  }
+}
+
+function renderStaffTable(container) {
+  var html = '<div class="table-wrapper"><table><thead><tr>' +
+    '<th>ID</th><th>이름</th><th>연락처</th><th>조직</th><th>상태</th><th>계약기간</th><th>D-day</th><th></th>' +
+  '</tr></thead><tbody>';
+
+  for (var i = 0; i < filteredStaffList.length; i++) {
+    var s = filteredStaffList[i];
+    var ddayHtml = '';
+    if (s.dday !== null && s.dday !== undefined && s.status === '근무중') {
+      var level = s.dday <= 3 ? 'danger' : s.dday <= 7 ? 'warning' : s.dday <= 30 ? 'info' : '';
+      if (level) {
+        ddayHtml = '<span class="dday-badge ' + level + '">D-' + s.dday + '</span>';
+      }
+    }
+
+    html += '<tr style="cursor:pointer;" onclick="openDetailPanel(\'' + s.id + '\')">' +
+      '<td style="color:var(--gray-500);font-size:12px;">' + s.id + '</td>' +
+      '<td><strong>' + s.name + '</strong></td>' +
+      '<td>' + (s.phone || '-') + '</td>' +
+      '<td>' + (s.org || '-') + '</td>' +
+      '<td><span class="status-badge ' + s.status + '">' + s.status + '</span></td>' +
+      '<td style="font-size:12px;">' + (s.contractStart || '') + (s.contractEnd ? ' ~ ' + s.contractEnd : '') + '</td>' +
+      '<td>' + ddayHtml + '</td>' +
+      '<td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openEditStaffModal(\'' + s.id + '\')"><i class="fas fa-edit"></i></button></td>' +
+    '</tr>';
+  }
+
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+function renderStaffCards(container) {
+  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">';
+
+  for (var i = 0; i < filteredStaffList.length; i++) {
+    var s = filteredStaffList[i];
+    var ddayHtml = '';
+    if (s.dday !== null && s.dday !== undefined && s.status === '근무중') {
+      var level = s.dday <= 3 ? 'danger' : s.dday <= 7 ? 'warning' : s.dday <= 30 ? 'info' : '';
+      if (level) ddayHtml = '<span class="dday-badge ' + level + '" style="margin-left:8px;">D-' + s.dday + '</span>';
+    }
+
+    html += '<div class="card" style="cursor:pointer;" onclick="openDetailPanel(\'' + s.id + '\')">' +
+      '<div class="card-body">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
+          '<strong style="font-size:15px;">' + s.name + '</strong>' +
+          '<span class="status-badge ' + s.status + '">' + s.status + '</span>' +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--gray-600);display:flex;flex-direction:column;gap:4px;">' +
+          '<div><i class="fas fa-phone" style="width:16px;"></i> ' + (s.phone || '-') + '</div>' +
+          '<div><i class="fas fa-building" style="width:16px;"></i> ' + (s.org || '-') + '</div>' +
+          '<div><i class="fas fa-calendar" style="width:16px;"></i> ' + (s.contractStart || '') + (s.contractEnd ? ' ~ ' + s.contractEnd : '') + ddayHtml + '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function toggleStaffView() {
+  staffViewMode = staffViewMode === 'table' ? 'card' : 'table';
+  var btn = document.getElementById('viewToggleBtn');
+  btn.innerHTML = staffViewMode === 'table'
+    ? '<i class="fas fa-th-large"></i> 카드형'
+    : '<i class="fas fa-list"></i> 테이블형';
+  renderStaffList();
+}
+
+// ============ 칸반 보드 ============
+function renderKanban() {
+  var board = document.getElementById('kanbanBoard');
+  var html = '';
+
+  for (var s = 0; s < statusList.length; s++) {
+    var status = statusList[s];
+    var staffInStatus = allStaffList.filter(function(st) { return st.status === status; });
+
+    html += '<div class="kanban-column" data-status="' + status + '" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">' +
+      '<div class="kanban-column-header">' +
+        '<span>' + status + '</span>' +
+        '<span class="count">' + staffInStatus.length + '</span>' +
+      '</div>' +
+      '<div class="kanban-column-body">';
+
+    for (var i = 0; i < staffInStatus.length; i++) {
+      var st = staffInStatus[i];
+      var ddayHtml = '';
+      if (st.dday !== null && st.dday !== undefined && status === '근무중') {
+        var level = st.dday <= 3 ? 'danger' : st.dday <= 7 ? 'warning' : st.dday <= 30 ? 'info' : '';
+        if (level) ddayHtml = ' <span class="dday-badge ' + level + '">D-' + st.dday + '</span>';
+      }
+
+      html += '<div class="kanban-card" draggable="true" data-id="' + st.id + '" ondragstart="onDragStart(event)" onclick="openDetailPanel(\'' + st.id + '\')">' +
+        '<div class="card-name">' + st.name + ddayHtml + '</div>' +
+        '<div class="card-info">' + (st.org || '') + (st.contractEnd ? ' | ~' + st.contractEnd : '') + '</div>' +
+      '</div>';
+    }
+
+    html += '</div></div>';
+  }
+
+  board.innerHTML = html;
+}
+
+// ============ 드래그 앤 드롭 ============
+var draggedStaffId = null;
+
+function onDragStart(e) {
+  draggedStaffId = e.target.getAttribute('data-id');
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  var col = e.target.closest('.kanban-column');
+  if (col) col.classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+  var col = e.target.closest('.kanban-column');
+  if (col) col.classList.remove('drag-over');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  var col = e.target.closest('.kanban-column');
+  if (!col) return;
+  col.classList.remove('drag-over');
+
+  var newStatus = col.getAttribute('data-status');
+  if (!draggedStaffId || !newStatus) return;
+
+  // 현재 상태 확인
+  var staff = allStaffList.find(function(s) { return s.id === draggedStaffId; });
+  if (!staff || staff.status === newStatus) {
+    draggedStaffId = null;
+    return;
+  }
+
+  // 전이 규칙 확인 (로컬)
+  var allowed = statusTransitions[staff.status] || [];
+  if (allowed.indexOf(newStatus) === -1) {
+    showToast('\'' + staff.status + '\' → \'' + newStatus + '\' 변경 불가. 허용: ' + allowed.join(', '), 'warning');
+    draggedStaffId = null;
+    return;
+  }
+
+  // 서버 호출
+  showLoading();
+  google.script.run
+    .withSuccessHandler(function(result) {
+      hideLoading();
+      if (result.success) {
+        // 로컬 업데이트
+        updateLocalStaff(result.staff);
+        renderKanban();
+        showToast(result.message, 'success');
+      } else {
+        showToast(result.message, 'error');
+      }
+      draggedStaffId = null;
+    })
+    .withFailureHandler(function(err) {
+      hideLoading();
+      showToast('서버 오류: ' + err.message, 'error');
+      draggedStaffId = null;
+    })
+    .updateStaffStatus(draggedStaffId, newStatus);
+}
+
+// ============ 스텝 등록/수정 모달 ============
+function openAddStaffModal() {
+  document.getElementById('staffModalTitle').textContent = '스텝 등록';
+  document.getElementById('staffFormId').value = '';
+  clearStaffForm();
+  document.getElementById('staffModal').classList.add('active');
+}
+
+function openEditStaffModal(id) {
+  var staff = allStaffList.find(function(s) { return s.id === id; });
+  if (!staff) return;
+
+  document.getElementById('staffModalTitle').textContent = '스텝 수정';
+  document.getElementById('staffFormId').value = staff.id;
+  document.getElementById('staffFormName').value = staff.name || '';
+  document.getElementById('staffFormPhone').value = staff.phone || '';
+  document.getElementById('staffFormEmail').value = staff.email || '';
+  document.getElementById('staffFormBirthDate').value = staff.birthDate || '';
+  document.getElementById('staffFormGender').value = staff.gender || '';
+  document.getElementById('staffFormAddress').value = staff.address || '';
+  document.getElementById('staffFormSource').value = staff.source || '';
+  document.getElementById('staffFormOrg').value = staff.org || '';
+  document.getElementById('staffFormDuty').value = staff.duty || '';
+  document.getElementById('staffFormContractStart').value = staff.contractStart || '';
+  document.getElementById('staffFormContractEnd').value = staff.contractEnd || '';
+  document.getElementById('staffFormPayType').value = staff.payType || '';
+  document.getElementById('staffFormPayAmount').value = staff.payAmount || '';
+  document.getElementById('staffFormBankName').value = staff.bankName || '';
+  document.getElementById('staffFormBankAccount').value = staff.bankAccount || '';
+  document.getElementById('staffFormMemo').value = staff.memo || '';
+
+  // 이력서 상태 표시
+  if (staff.resumeUrl) {
+    _resumeUrl = staff.resumeUrl;
+    document.getElementById('resumeUploadArea').classList.add('has-file');
+    document.getElementById('resumeUploadText').textContent = '이력서 등록됨 (새 파일로 교체 가능)';
+  } else {
+    _resumeUrl = null;
+    document.getElementById('resumeUploadArea').classList.remove('has-file');
+    document.getElementById('resumeUploadText').textContent = 'PDF 파일을 클릭하여 선택하세요';
+  }
+  document.getElementById('resumeParsingStatus').className = 'resume-parsing-status';
+  document.getElementById('resumeParsingStatus').innerHTML = '';
+
+  document.getElementById('staffModal').classList.add('active');
+}
+
+function closeStaffModal() {
+  document.getElementById('staffModal').classList.remove('active');
+}
+
+function clearStaffForm() {
+  var fields = ['staffFormName','staffFormPhone','staffFormEmail','staffFormBirthDate',
+    'staffFormGender','staffFormAddress','staffFormSource','staffFormOrg','staffFormDuty',
+    'staffFormContractStart','staffFormContractEnd','staffFormPayType','staffFormPayAmount',
+    'staffFormBankName','staffFormBankAccount','staffFormMemo'];
+  for (var i = 0; i < fields.length; i++) {
+    document.getElementById(fields[i]).value = '';
+  }
+  // 이력서 초기화
+  _resumeBase64 = null;
+  _resumeFileName = null;
+  _resumeUrl = null;
+  document.getElementById('resumeFileInput').value = '';
+  document.getElementById('resumeUploadArea').classList.remove('has-file');
+  document.getElementById('resumeUploadText').textContent = 'PDF 파일을 클릭하여 선택하세요';
+  document.getElementById('resumeParsingStatus').className = 'resume-parsing-status';
+  document.getElementById('resumeParsingStatus').innerHTML = '';
+}
+
+// ============ 이력서 업로드 ============
+function onResumeFileSelected(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (file.type !== 'application/pdf') {
+    showToast('PDF 파일만 업로드할 수 있습니다.', 'warning');
+    input.value = '';
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('파일 크기가 10MB를 초과합니다.', 'warning');
+    input.value = '';
+    return;
+  }
+  var area = document.getElementById('resumeUploadArea');
+  area.classList.add('has-file');
+  document.getElementById('resumeUploadText').textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + 'MB)';
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var base64 = e.target.result.split(',')[1];
+    _resumeBase64 = base64;
+    _resumeFileName = file.name;
+    extractResumeText(base64, file.name);
+  };
+  reader.readAsDataURL(file);
+}
+
+function extractResumeText(base64Data, fileName) {
+  var statusEl = document.getElementById('resumeParsingStatus');
+  statusEl.className = 'resume-parsing-status loading';
+  statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 이력서 내용을 분석 중입니다...';
+
+  var staffId = document.getElementById('staffFormId').value || '';
+  var staffName = document.getElementById('staffFormName').value || '';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        statusEl.className = 'resume-parsing-status done';
+        statusEl.innerHTML = '<i class="fas fa-check-circle"></i> 분석 완료! 비어있는 항목만 자동 채움 (수동입력 우선)';
+        _resumeUrl = result.resumeUrl;
+        autoFillFromResume(result.parsed || {});
+      } else {
+        statusEl.className = 'resume-parsing-status error';
+        statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + result.message;
+      }
+    })
+    .withFailureHandler(function(err) {
+      statusEl.className = 'resume-parsing-status error';
+      statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> 분석 실패: ' + err.message;
+    })
+    .uploadResumeAndExtractText(base64Data, fileName, staffId, staffName);
+}
+
+function autoFillFromResume(parsed) {
+  var fields = {
+    staffFormName: parsed.name,
+    staffFormPhone: parsed.phone,
+    staffFormEmail: parsed.email,
+    staffFormBirthDate: parsed.birthDate,
+    staffFormGender: parsed.gender,
+    staffFormAddress: parsed.address
+  };
+  for (var fieldId in fields) {
+    var el = document.getElementById(fieldId);
+    if (el && !el.value && fields[fieldId]) {
+      el.value = fields[fieldId];
+    }
+  }
+}
+
+function submitStaffForm() {
+  var name = document.getElementById('staffFormName').value.trim();
+  if (!name) {
+    showToast('이름은 필수 입력입니다.', 'warning');
+    return;
+  }
+
+  var formData = {
+    id: document.getElementById('staffFormId').value,
+    name: name,
+    phone: document.getElementById('staffFormPhone').value.trim(),
+    email: document.getElementById('staffFormEmail').value.trim(),
+    birthDate: document.getElementById('staffFormBirthDate').value,
+    gender: document.getElementById('staffFormGender').value,
+    address: document.getElementById('staffFormAddress').value.trim(),
+    source: document.getElementById('staffFormSource').value,
+    org: document.getElementById('staffFormOrg').value.trim(),
+    duty: document.getElementById('staffFormDuty').value.trim(),
+    contractStart: document.getElementById('staffFormContractStart').value,
+    contractEnd: document.getElementById('staffFormContractEnd').value,
+    payType: document.getElementById('staffFormPayType').value,
+    payAmount: document.getElementById('staffFormPayAmount').value,
+    bankName: document.getElementById('staffFormBankName').value.trim(),
+    bankAccount: document.getElementById('staffFormBankAccount').value.trim(),
+    memo: document.getElementById('staffFormMemo').value.trim(),
+    resumeUrl: _resumeUrl || ''
+  };
+
+  var isEdit = !!formData.id;
+  var fnName = isEdit ? 'updateStaff' : 'addStaff';
+
+  showLoading();
+  document.getElementById('staffFormSubmitBtn').disabled = true;
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      hideLoading();
+      document.getElementById('staffFormSubmitBtn').disabled = false;
+      if (result.success) {
+        if (isEdit) {
+          updateLocalStaff(result.staff);
+        } else {
+          allStaffList.push(result.staff);
+        }
+        closeStaffModal();
+        applyFilters();
+        renderKanban();
+        renderDashboard();
+        showToast(result.message, 'success');
+      } else {
+        showToast(result.message, 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      hideLoading();
+      document.getElementById('staffFormSubmitBtn').disabled = false;
+      showToast('서버 오류: ' + err.message, 'error');
+    })[fnName](formData);
+}
+
+// ============ 상세 패널 ============
+function openDetailPanel(id) {
+  showLoading();
+  google.script.run
+    .withSuccessHandler(function(result) {
+      hideLoading();
+      if (result.success) {
+        renderDetailPanel(result.data);
+        document.getElementById('detailPanel').classList.add('open');
+        document.getElementById('detailPanelOverlay').classList.add('open');
+      } else {
+        showToast(result.message, 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      hideLoading();
+      showToast('서버 오류: ' + err.message, 'error');
+    })
+    .getStaffById(id);
+}
+
+function closeDetailPanel() {
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('detailPanelOverlay').classList.remove('open');
+}
+
+function renderDetailPanel(staff) {
+  document.getElementById('detailPanelTitle').textContent = staff.name + ' 상세';
+
+  var ddayHtml = '';
+  if (staff.dday !== null && staff.dday !== undefined) {
+    var level = staff.dday <= 3 ? 'danger' : staff.dday <= 7 ? 'warning' : staff.dday <= 30 ? 'info' : '';
+    if (level) ddayHtml = '<span class="dday-badge ' + level + '" style="margin-left:8px;">D-' + staff.dday + '</span>';
+  }
+
+  var html = '' +
+    '<div style="margin-bottom:24px;">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+        '<span class="status-badge ' + staff.status + '">' + staff.status + '</span>' +
+        ddayHtml +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:100px 1fr;gap:8px;font-size:13px;">' +
+        '<span style="color:var(--gray-500);">ID</span><span>' + staff.id + '</span>' +
+        '<span style="color:var(--gray-500);">이름</span><span><strong>' + staff.name + '</strong></span>' +
+        '<span style="color:var(--gray-500);">연락처</span><span>' + (staff.phone || '-') + '</span>' +
+        '<span style="color:var(--gray-500);">이메일</span><span>' + (staff.email || '-') + '</span>' +
+        '<span style="color:var(--gray-500);">생년월일</span><span>' + (staff.birthDate || '-') + '</span>' +
+        '<span style="color:var(--gray-500);">성별</span><span>' + (staff.gender || '-') + '</span>' +
+        '<span style="color:var(--gray-500);">주소</span><span>' + (staff.address || '-') + '</span>' +
+        '<span style="color:var(--gray-500);">지원경로</span><span>' + (staff.source || '-') + '</span>' +
+        '<span style="color:var(--gray-500);">조직</span><span>' + (staff.org || '-') + '</span>' +
+        '<span style="color:var(--gray-500);">직무</span><span>' + (staff.duty || '-') + '</span>' +
+        '<span style="color:var(--gray-500);">계약기간</span><span>' + (staff.contractStart || '') + (staff.contractEnd ? ' ~ ' + staff.contractEnd : '') + '</span>' +
+        '<span style="color:var(--gray-500);">급여</span><span>' + (staff.payType || '') + ' ' + (staff.payAmount ? Number(staff.payAmount).toLocaleString() + '원' : '-') + '</span>' +
+        '<span style="color:var(--gray-500);">등록일</span><span>' + (staff.createdAt || '-') + '</span>' +
+      '</div>' +
+    '</div>';
+
+  // 이력서
+  if (staff.resumeUrl) {
+    html += '<div style="margin-bottom:16px;padding:12px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;gap:10px;">' +
+      '<i class="fas fa-file-pdf" style="font-size:20px;color:#dc2626;"></i>' +
+      '<div style="flex:1;"><div style="font-weight:600;font-size:13px;">이력서</div><div style="font-size:11px;color:var(--gray-500);">PDF 파일이 등록되어 있습니다</div></div>' +
+      '<a href="' + staff.resumeUrl + '" target="_blank" class="btn btn-sm btn-outline"><i class="fas fa-external-link-alt"></i> 열기</a>' +
+    '</div>';
+  }
+
+  // 성과평가 이력
+  if (staff.evaluations && staff.evaluations.length > 0) {
+    html += '<h4 style="font-size:14px;margin-bottom:12px;padding-top:16px;border-top:1px solid var(--gray-200);">성과평가 이력</h4>';
+    html += '<div class="table-wrapper"><table><thead><tr><th>기간</th><th>평균</th><th>등급</th><th>평가일</th></tr></thead><tbody>';
+    for (var i = 0; i < staff.evaluations.length; i++) {
+      var ev = staff.evaluations[i];
+      var extraInfo = '';
+      if (ev.extraScores) {
+        var ekeys = Object.keys(ev.extraScores);
+        if (ekeys.length > 0) {
+          var parts = [];
+          for (var ei = 0; ei < ekeys.length; ei++) { parts.push(ekeys[ei] + ':' + ev.extraScores[ekeys[ei]]); }
+          extraInfo = ' <span style="font-size:11px;color:var(--gray-500);">(' + parts.join(', ') + ')</span>';
+        }
+      }
+      html += '<tr><td>' + (ev.period || '-') + '</td><td>' + ev.average + extraInfo + '</td><td><strong>' + ev.grade + '</strong></td><td>' + (ev.evalDate || '-') + '</td></tr>';
+    }
+    html += '</tbody></table></div>';
+  }
+
+  // 계약이력
+  if (staff.contracts && staff.contracts.length > 0) {
+    html += '<h4 style="font-size:14px;margin:16px 0 12px;padding-top:16px;border-top:1px solid var(--gray-200);">계약이력</h4>';
+    html += '<div class="table-wrapper"><table><thead><tr><th>구분</th><th>기간</th><th>상태</th></tr></thead><tbody>';
+    for (var j = 0; j < staff.contracts.length; j++) {
+      var ct = staff.contracts[j];
+      html += '<tr><td>' + ct.type + '</td><td>' + (ct.startDate || '') + ' ~ ' + (ct.endDate || '') + '</td><td>' + ct.contractStatus + '</td></tr>';
+    }
+    html += '</tbody></table></div>';
+  }
+
+  // 근태관리 연동 영역
+  if (staff.email) {
+    html += '<div id="linkedAttendanceArea" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--gray-200);">' +
+      '<h4 style="font-size:14px;margin-bottom:12px;"><i class="fas fa-link" style="color:var(--primary);margin-right:6px;"></i>근태관리 연동</h4>' +
+      '<p style="color:var(--gray-400);font-size:12px;">불러오는 중...</p>' +
+    '</div>';
+  }
+
+  document.getElementById('detailPanelBody').innerHTML = html;
+
+  // 근태 연동 데이터 비동기 로드
+  if (staff.email) {
+    google.script.run
+      .withSuccessHandler(function(res) {
+        var area = document.getElementById('linkedAttendanceArea');
+        if (!area) return;
+        if (!res.success) {
+          area.innerHTML = '<h4 style="font-size:14px;margin-bottom:8px;"><i class="fas fa-link" style="color:var(--primary);margin-right:6px;"></i>근태관리 연동</h4>' +
+            '<p style="color:var(--gray-400);font-size:12px;">' + res.message + '</p>';
+          return;
+        }
+        if (!res.data) {
+          area.innerHTML = '<h4 style="font-size:14px;margin-bottom:8px;"><i class="fas fa-link" style="color:var(--primary);margin-right:6px;"></i>근태관리 연동</h4>' +
+            '<p style="color:var(--gray-400);font-size:12px;">' + (res.message || '연동 데이터 없음') + '</p>';
+          return;
+        }
+        var d = res.data;
+        var inner = '<h4 style="font-size:14px;margin-bottom:12px;"><i class="fas fa-link" style="color:var(--primary);margin-right:6px;"></i>근태관리 연동</h4>';
+        inner += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;">';
+        if (d.attendance) {
+          inner += '<div style="background:var(--gray-50);padding:10px;border-radius:8px;text-align:center;">' +
+            '<div style="font-size:11px;color:var(--gray-500);">이번 달 출근</div>' +
+            '<div style="font-size:18px;font-weight:700;color:var(--primary);">' + d.attendance.monthDays + '일</div></div>';
+          inner += '<div style="background:var(--gray-50);padding:10px;border-radius:8px;text-align:center;">' +
+            '<div style="font-size:11px;color:var(--gray-500);">이번 달 지각</div>' +
+            '<div style="font-size:18px;font-weight:700;color:' + (d.attendance.lateDays > 0 ? 'var(--danger)' : 'var(--success)') + ';">' + d.attendance.lateDays + '회</div></div>';
+          inner += '<div style="background:var(--gray-50);padding:10px;border-radius:8px;text-align:center;">' +
+            '<div style="font-size:11px;color:var(--gray-500);">근무시간</div>' +
+            '<div style="font-size:18px;font-weight:700;">' + d.attendance.totalHours + 'h</div></div>';
+        }
+        if (d.leave) {
+          inner += '<div style="background:var(--gray-50);padding:10px;border-radius:8px;text-align:center;">' +
+            '<div style="font-size:11px;color:var(--gray-500);">연차잔여</div>' +
+            '<div style="font-size:18px;font-weight:700;color:var(--info);">' + d.leave.balance + '일</div></div>';
+        }
+        if (d.payroll) {
+          inner += '<div style="background:var(--gray-50);padding:10px;border-radius:8px;text-align:center;">' +
+            '<div style="font-size:11px;color:var(--gray-500);">최근급여(' + d.payroll.period + ')</div>' +
+            '<div style="font-size:18px;font-weight:700;">' + Number(d.payroll.totalPay).toLocaleString() + '원</div></div>';
+        }
+        inner += '</div>';
+        area.innerHTML = inner;
+      })
+      .withFailureHandler(function(err) {
+        var area = document.getElementById('linkedAttendanceArea');
+        if (area) area.innerHTML = '<h4 style="font-size:14px;margin-bottom:8px;"><i class="fas fa-link" style="color:var(--primary);margin-right:6px;"></i>근태관리 연동</h4>' +
+          '<p style="color:var(--gray-400);font-size:12px;">연동 실패: ' + err.message + '</p>';
+      })
+      .getStaffAttendanceSummary(staff.email);
+  }
+
+  // 하단 액션
+  document.getElementById('detailPanelFooter').innerHTML =
+    '<button class="btn btn-outline" onclick="closeDetailPanel()">닫기</button>' +
+    '<button class="btn btn-primary" onclick="closeDetailPanel();openEditStaffModal(\'' + staff.id + '\')"><i class="fas fa-edit"></i> 수정</button>' +
+    (userRole === '최고관리자' || userRole === '총괄관리자'
+      ? '<button class="btn btn-danger" onclick="confirmDeleteStaff(\'' + staff.id + '\',\'' + staff.name + '\')"><i class="fas fa-trash"></i> 삭제</button>'
+      : '');
+}
+
+function confirmDeleteStaff(id, name) {
+  if (!confirm(name + ' 스텝을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+
+  showLoading();
+  google.script.run
+    .withSuccessHandler(function(result) {
+      hideLoading();
+      if (result.success) {
+        allStaffList = allStaffList.filter(function(s) { return s.id !== id; });
+        closeDetailPanel();
+        applyFilters();
+        renderKanban();
+        renderDashboard();
+        showToast(result.message, 'success');
+      } else {
+        showToast(result.message, 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      hideLoading();
+      showToast('서버 오류: ' + err.message, 'error');
+    })
+    .deleteStaff(id);
+}
+
+// ============ 성과평가 모달 ============
+function openAddEvalModal() {
+  // 스텝 선택 옵션 채우기
+  var select = document.getElementById('evalFormStaff');
+  select.innerHTML = '<option value="">선택</option>';
+  var workingStaff = allStaffList.filter(function(s) {
+    return s.status === '교육' || s.status === '근무중';
+  });
+  for (var i = 0; i < workingStaff.length; i++) {
+    select.innerHTML += '<option value="' + workingStaff[i].id + '" data-name="' + workingStaff[i].name + '" data-org="' + (workingStaff[i].org || '') + '">' + workingStaff[i].name + ' (' + workingStaff[i].id + ')</option>';
+  }
+
+  // 폼 초기화
+  document.getElementById('evalFormPeriod').value = '';
+  document.getElementById('evalFormComment').value = '';
+
+  // 템플릿 로드 → 기본 항목으로 폼 생성
+  if (!_evalTemplates) {
+    google.script.run
+      .withSuccessHandler(function(result) {
+        if (result.success) _evalTemplates = result.data;
+        buildEvalCriteriaFields_(getEvalCriteriaForOrg_(''));
+      })
+      .withFailureHandler(function() {
+        buildEvalCriteriaFields_(['정확성', '속도', '협업', '출석', '태도']);
+      })
+      .getEvalTemplates();
+  } else {
+    buildEvalCriteriaFields_(getEvalCriteriaForOrg_(''));
+  }
+
+  document.getElementById('evalModal').classList.add('active');
+}
+
+function closeEvalModal() {
+  document.getElementById('evalModal').classList.remove('active');
+}
+
+function onEvalStaffSelect() {
+  var staffSelect = document.getElementById('evalFormStaff');
+  var selectedOption = staffSelect.options[staffSelect.selectedIndex];
+  if (!staffSelect.value) return;
+  var org = selectedOption.getAttribute('data-org') || '';
+  var criteria = getEvalCriteriaForOrg_(org);
+  buildEvalCriteriaFields_(criteria);
+}
+
+function submitEvalForm() {
+  var staffSelect = document.getElementById('evalFormStaff');
+  var selectedOption = staffSelect.options[staffSelect.selectedIndex];
+
+  if (!staffSelect.value) {
+    showToast('스텝을 선택해주세요.', 'warning');
+    return;
+  }
+
+  var baseCriteriaKeys = {
+    '정확성': 'accuracy',
+    '속도': 'speed',
+    '협업': 'teamwork',
+    '출석': 'attendance',
+    '태도': 'attitude'
+  };
+
+  var formData = {
+    staffId: staffSelect.value,
+    staffName: selectedOption.getAttribute('data-name') || '',
+    org: selectedOption.getAttribute('data-org') || '',
+    period: document.getElementById('evalFormPeriod').value.trim(),
+    accuracy: '0',
+    speed: '0',
+    teamwork: '0',
+    attendance: '0',
+    attitude: '0',
+    extraScores: {},
+    comment: document.getElementById('evalFormComment').value.trim()
+  };
+
+  // 동적 항목 수집
+  var allSelects = document.getElementById('evalCriteriaFields').querySelectorAll('select[data-criterion]');
+  for (var i = 0; i < allSelects.length; i++) {
+    var criterionName = allSelects[i].getAttribute('data-criterion');
+    var value = allSelects[i].value;
+    if (baseCriteriaKeys[criterionName]) {
+      formData[baseCriteriaKeys[criterionName]] = value;
+    } else {
+      formData.extraScores[criterionName] = value;
+    }
+  }
+
+  // 전체 항목 선택 확인
+  for (var j = 0; j < allSelects.length; j++) {
+    if (allSelects[j].value === '0') {
+      showToast('모든 평가 항목을 선택해주세요.', 'warning');
+      return;
+    }
+  }
+
+  showLoading();
+  google.script.run
+    .withSuccessHandler(function(result) {
+      hideLoading();
+      if (result.success) {
+        closeEvalModal();
+        _evaluations = null;
+        if (currentPage === 'evaluation') renderEvaluation();
+        showToast(result.message, 'success');
+      } else {
+        showToast(result.message, 'error');
+      }
+    })
+    .withFailureHandler(function(err) {
+      hideLoading();
+      showToast('서버 오류: ' + err.message, 'error');
+    })
+    .addEvaluation(formData);
+}
+
+// ============ 로컬 데이터 업데이트 ============
+function updateLocalStaff(updatedStaff) {
+  for (var i = 0; i < allStaffList.length; i++) {
+    if (allStaffList[i].id === updatedStaff.id) {
+      allStaffList[i] = updatedStaff;
+      break;
+    }
+  }
+  // 상태 카운트 재계산
+  statusCounts = {};
+  for (var s = 0; s < statusList.length; s++) {
+    statusCounts[statusList[s]] = 0;
+  }
+  for (var j = 0; j < allStaffList.length; j++) {
+    var st = allStaffList[j].status;
+    if (statusCounts.hasOwnProperty(st)) {
+      statusCounts[st]++;
+    }
+  }
+}
+
+// ============ UI 유틸 ============
+function showLoading() {
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+function showToast(message, type) {
+  type = type || 'info';
+  var icons = { success: 'check-circle', error: 'exclamation-circle', warning: 'exclamation-triangle', info: 'info-circle' };
+  var container = document.getElementById('toastContainer');
+  var toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.innerHTML = '<i class="fas fa-' + icons[type] + '"></i> ' + message;
+  container.appendChild(toast);
+  setTimeout(function() {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(100%)';
+    toast.style.transition = 'all 0.3s ease';
+    setTimeout(function() { toast.remove(); }, 300);
+  }, 3000);
+}
+
+// ============ 성과평가 페이지 ============
+
+var _evaluations = null;
+var _evalTemplates = null;
+
+var EVAL_CRITERIA_ID_MAP = {
+  '정확성': 'evalFormAccuracy',
+  '속도': 'evalFormSpeed',
+  '협업': 'evalFormTeamwork',
+  '출석': 'evalFormAttendance',
+  '태도': 'evalFormAttitude'
+};
+
+function getEvalCriteriaForOrg_(org) {
+  if (!_evalTemplates) return ['정확성', '속도', '협업', '출석', '태도'];
+  if (org && _evalTemplates[org]) return _evalTemplates[org];
+  return _evalTemplates['DEFAULT'] || ['정확성', '속도', '협업', '출석', '태도'];
+}
+
+function buildEvalCriteriaFields_(criteria) {
+  var container = document.getElementById('evalCriteriaFields');
+  if (!container) return;
+  var html = '';
+  for (var i = 0; i < criteria.length; i += 2) {
+    html += '<div class="form-row">';
+    var c1 = criteria[i];
+    var id1 = EVAL_CRITERIA_ID_MAP[c1] || 'evalFormExtra_' + i;
+    html += '<div class="form-group"><label>' + c1 + '</label>' +
+      '<select id="' + id1 + '" data-criterion="' + c1 + '">' +
+      '<option value="0">선택</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>';
+    if (i + 1 < criteria.length) {
+      var c2 = criteria[i + 1];
+      var id2 = EVAL_CRITERIA_ID_MAP[c2] || 'evalFormExtra_' + (i + 1);
+      html += '<div class="form-group"><label>' + c2 + '</label>' +
+        '<select id="' + id2 + '" data-criterion="' + c2 + '">' +
+        '<option value="0">선택</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>';
+    } else {
+      html += '<div class="form-group"></div>';
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function renderEvaluation() {
+  var container = document.getElementById('evaluationContainer');
+  if (_evaluations) {
+    renderEvalTable(_evaluations);
+    return;
+  }
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray-500);"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:12px;">평가 데이터 로딩 중...</p></div>';
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        _evaluations = result.data;
+        renderEvalTable(_evaluations);
+      } else {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>' + result.message + '</p></div>';
+      }
+    })
+    .withFailureHandler(function(err) {
+      container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>평가 데이터 로드 실패</p></div>';
+    })
+    .getAllEvaluations();
+}
+
+function renderEvalTable(evals) {
+  var container = document.getElementById('evaluationContainer');
+  if (!evals || evals.length === 0) {
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-star"></i><h3>성과평가 이력이 없습니다</h3><p>스텝 상세 또는 "평가 등록" 버튼으로 평가를 추가하세요.</p></div>';
+    return;
+  }
+
+  // 모든 평가에서 사용된 추가 항목 수집
+  var extraCriteriaSet = {};
+  for (var e = 0; e < evals.length; e++) {
+    if (evals[e].extraScores) {
+      var keys = Object.keys(evals[e].extraScores);
+      for (var k = 0; k < keys.length; k++) {
+        extraCriteriaSet[keys[k]] = true;
+      }
+    }
+  }
+  var extraCriteriaList = Object.keys(extraCriteriaSet).sort();
+  var totalColspan = 13 + extraCriteriaList.length;
+
+  // 헤더
+  var html = '<div style="overflow-x:auto;"><table class="data-table"><thead><tr>' +
+    '<th>스텝명</th><th>조직</th><th>평가기간</th>' +
+    '<th>정확성</th><th>속도</th><th>협업</th><th>출석</th><th>태도</th>';
+  for (var h = 0; h < extraCriteriaList.length; h++) {
+    html += '<th style="background:#e8f5e9;color:#2e7d32;">' + extraCriteriaList[h] + '</th>';
+  }
+  html += '<th>총점</th><th>평균</th><th>등급</th><th>평가자</th><th>평가일</th></tr></thead><tbody>';
+
+  // 행
+  for (var i = 0; i < evals.length; i++) {
+    var ev = evals[i];
+    var gradeClass = ev.grade === 'S' ? 'color:#e74c3c;font-weight:700;' : ev.grade === 'A' ? 'color:#f39c12;font-weight:700;' : '';
+    html += '<tr>' +
+      '<td><strong>' + (ev.staffName || '') + '</strong></td>' +
+      '<td>' + (ev.org || '') + '</td>' +
+      '<td>' + (ev.period || '') + '</td>' +
+      '<td style="text-align:center;">' + ev.accuracy + '</td>' +
+      '<td style="text-align:center;">' + ev.speed + '</td>' +
+      '<td style="text-align:center;">' + ev.teamwork + '</td>' +
+      '<td style="text-align:center;">' + ev.attendance + '</td>' +
+      '<td style="text-align:center;">' + ev.attitude + '</td>';
+    for (var x = 0; x < extraCriteriaList.length; x++) {
+      var extraVal = (ev.extraScores && ev.extraScores[extraCriteriaList[x]]) ? ev.extraScores[extraCriteriaList[x]] : '-';
+      html += '<td style="text-align:center;background:#f9fdf9;">' + extraVal + '</td>';
+    }
+    html += '<td style="text-align:center;font-weight:700;">' + ev.total + '</td>' +
+      '<td style="text-align:center;">' + ev.average + '</td>' +
+      '<td style="text-align:center;' + gradeClass + '">' + ev.grade + '</td>' +
+      '<td>' + (ev.evaluator || '') + '</td>' +
+      '<td>' + (ev.evalDate || '') + '</td>' +
+      '</tr>';
+    if (ev.comment) {
+      html += '<tr><td colspan="' + totalColspan + '" style="padding:4px 12px;background:var(--gray-50);font-size:12px;color:var(--gray-600);">💬 ' + ev.comment + '</td></tr>';
+    }
+  }
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+// ============ 계약이력 페이지 ============
+
+var _contracts = null;
+
+function renderContract() {
+  var container = document.getElementById('contractContainer');
+  if (_contracts) {
+    renderContractTable(_contracts);
+    return;
+  }
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray-500);"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:12px;">계약이력 로딩 중...</p></div>';
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        _contracts = result.data;
+        renderContractTable(_contracts);
+      } else {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>' + result.message + '</p></div>';
+      }
+    })
+    .withFailureHandler(function(err) {
+      container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>계약이력 로드 실패</p></div>';
+    })
+    .getAllContracts();
+}
+
+function renderContractTable(contracts) {
+  var container = document.getElementById('contractContainer');
+  if (!contracts || contracts.length === 0) {
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-file-contract"></i><h3>계약이력이 없습니다</h3><p>스텝의 상태를 "계약종료" 또는 "재계약"으로 변경하면 자동으로 기록됩니다.</p></div>';
+    return;
+  }
+
+  var html = '<div style="overflow-x:auto;"><table class="data-table"><thead><tr>' +
+    '<th>스텝명</th><th>조직</th><th>계약구분</th><th>시작일</th><th>종료일</th>' +
+    '<th>급여형태</th><th>급여액</th><th>상태</th><th>등록일</th><th>등록자</th></tr></thead><tbody>';
+
+  for (var i = 0; i < contracts.length; i++) {
+    var ct = contracts[i];
+    var statusColor = ct.status === '종료' ? 'color:var(--gray-500);' : ct.status === '재계약진행' ? 'color:var(--primary);font-weight:600;' : '';
+    html += '<tr>' +
+      '<td><strong>' + (ct.staffName || '') + '</strong></td>' +
+      '<td>' + (ct.org || '') + '</td>' +
+      '<td>' + (ct.type || '') + '</td>' +
+      '<td>' + (ct.startDate || '') + '</td>' +
+      '<td>' + (ct.endDate || '') + '</td>' +
+      '<td>' + (ct.payType || '') + '</td>' +
+      '<td style="text-align:right;">' + (ct.payAmount ? Number(ct.payAmount).toLocaleString() + '원' : '') + '</td>' +
+      '<td style="' + statusColor + '">' + (ct.status || '') + '</td>' +
+      '<td>' + (ct.createdAt || '') + '</td>' +
+      '<td>' + (ct.creator || '') + '</td>' +
+      '</tr>';
+  }
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+// ============ 설정 페이지 ============
+
+var _settings = null;
+var _adminList = null;
+
+function renderSettings() {
+  var container = document.getElementById('settingsContainer');
+
+  if (userRole !== '최고관리자') {
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-lock"></i><h3>접근 권한이 없습니다</h3><p>최고관리자만 설정을 변경할 수 있습니다.</p></div>';
+    return;
+  }
+
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray-500);"><i class="fas fa-spinner fa-spin fa-2x"></i><p>설정 로딩 중...</p></div>';
+
+  // 설정값 + 관리자 목록 동시 로드
+  var loaded = { settings: false, admins: false };
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) _settings = result.data;
+      loaded.settings = true;
+      if (loaded.admins) renderSettingsUI();
+    })
+    .getSettings();
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) _adminList = result.data;
+      loaded.admins = true;
+      if (loaded.settings) renderSettingsUI();
+    })
+    .getAdminListForSettings();
+}
+
+function renderSettingsUI() {
+  var container = document.getElementById('settingsContainer');
+  var html = '';
+
+  // 관리자 목록 섹션
+  html += '<div class="card" style="margin-bottom:24px;">' +
+    '<div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">' +
+    '<h3 style="margin:0;font-size:16px;"><i class="fas fa-user-shield"></i> 관리자 목록</h3>' +
+    '<button class="btn btn-primary btn-sm" onclick="openAddAdminModal()"><i class="fas fa-plus"></i> 추가</button>' +
+    '</div>' +
+    '<div style="overflow-x:auto;"><table class="data-table"><thead><tr>' +
+    '<th>이메일</th><th>이름</th><th>역할</th><th>담당 조직</th><th>상태</th><th>관리</th></tr></thead><tbody>';
+
+  if (_adminList && _adminList.length > 0) {
+    for (var i = 0; i < _adminList.length; i++) {
+      var a = _adminList[i];
+      var roleColor = a.role === '최고관리자' ? 'color:#e74c3c;' : a.role === '총괄관리자' ? 'color:#f39c12;' : a.role === '조직관리자' ? 'color:#3498db;' : '';
+      html += '<tr>' +
+        '<td>' + a.email + '</td>' +
+        '<td>' + a.name + '</td>' +
+        '<td style="' + roleColor + 'font-weight:600;">' + a.role + '</td>' +
+        '<td>' + (a.org || '-') + '</td>' +
+        '<td>' + (a.status === '활성' ? '<span style="color:var(--success);">활성</span>' : '<span style="color:var(--gray-400);">비활성</span>') + '</td>' +
+        '<td><button class="btn btn-outline btn-sm" onclick="deleteAdminConfirm(\'' + a.email + '\',\'' + a.name + '\')"><i class="fas fa-trash"></i></button></td>' +
+        '</tr>';
+    }
+  } else {
+    html += '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);">등록된 관리자가 없습니다</td></tr>';
+  }
+  html += '</tbody></table></div></div>';
+
+  // 평가 템플릿 관리 섹션
+  html += '<div class="card" style="margin-bottom:24px;">' +
+    '<div class="card-header"><h3 style="margin:0;font-size:16px;"><i class="fas fa-clipboard-list"></i> 평가 템플릿 관리</h3></div>' +
+    '<div style="padding:16px;">' +
+    '<p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;">팀별 성과평가 항목을 설정합니다. 기본 5항목(정확성, 속도, 협업, 출석, 태도)은 필수이며, 추가 항목을 쉼표로 구분하여 입력합니다.</p>' +
+    '<div id="evalTemplateArea"><p style="color:var(--gray-400);">로딩 중...</p></div>' +
+    '</div></div>';
+
+  // 시스템 설정 섹션
+  html += '<div class="card">' +
+    '<div class="card-header"><h3 style="margin:0;font-size:16px;"><i class="fas fa-cog"></i> 시스템 설정</h3></div>' +
+    '<div style="padding:16px;">';
+
+  if (_settings && _settings.length > 0) {
+    for (var j = 0; j < _settings.length; j++) {
+      var s = _settings[j];
+      html += '<div class="form-row" style="margin-bottom:12px;">' +
+        '<div class="form-group" style="flex:1;">' +
+        '<label>' + s.key + ' <span style="color:var(--gray-400);font-size:11px;">(' + (s.description || '') + ')</span></label>' +
+        '<div style="display:flex;gap:8px;">' +
+        '<input type="text" id="setting_' + s.key + '" value="' + s.value + '" style="flex:1;">' +
+        '<button class="btn btn-primary btn-sm" onclick="saveSetting(\'' + s.key + '\')">저장</button>' +
+        '</div></div></div>';
+    }
+  } else {
+    html += '<p style="color:var(--gray-400);">설정 항목이 없습니다.</p>';
+  }
+  html += '</div></div>';
+
+  container.innerHTML = html;
+  loadEvalTemplatesForSettings();
+}
+
+function loadEvalTemplatesForSettings() {
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (!result.success) return;
+      _evalTemplates = result.data;
+      renderEvalTemplateEditor();
+    })
+    .withFailureHandler(function() {
+      var area = document.getElementById('evalTemplateArea');
+      if (area) area.innerHTML = '<p style="color:var(--gray-400);">템플릿 로드 실패</p>';
+    })
+    .getEvalTemplates();
+}
+
+function renderEvalTemplateEditor() {
+  var area = document.getElementById('evalTemplateArea');
+  if (!area) return;
+  var orgList = ['DEFAULT', '검토팀', '고객지원팀', '뉴터칭콜팀', '분류팀', '신고팀', '인용확인팀', '작성팀', '세무서대응팀'];
+  var html = '';
+  for (var i = 0; i < orgList.length; i++) {
+    var org = orgList[i];
+    var label = org === 'DEFAULT' ? '기본 (전체)' : org;
+    var criteria = (_evalTemplates && _evalTemplates[org]) ? _evalTemplates[org].join(',') : '';
+    var ph = org === 'DEFAULT' ? '정확성,속도,협업,출석,태도' : '비워두면 기본 템플릿 사용';
+    html += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">' +
+      '<span style="flex:0 0 110px;font-weight:600;font-size:13px;">' + label + '</span>' +
+      '<input type="text" id="evalTpl_' + org + '" value="' + criteria + '" placeholder="' + ph + '" style="flex:1;font-size:13px;">' +
+      '<button class="btn btn-primary btn-sm" onclick="saveEvalTpl(\'' + org + '\')">저장</button>' +
+      '</div>';
+  }
+  area.innerHTML = html;
+}
+
+function saveEvalTpl(org) {
+  var el = document.getElementById('evalTpl_' + org);
+  if (!el) return;
+  var value = el.value.trim();
+  if (!value && org === 'DEFAULT') {
+    showToast('기본 템플릿은 비워둘 수 없습니다.', 'warning');
+    return;
+  }
+  if (!value) {
+    google.script.run
+      .withSuccessHandler(function(result) {
+        showToast(org + ' 템플릿이 기본값으로 초기화됩니다.', 'info');
+        _evalTemplates = null;
+      })
+      .updateSetting('EVAL_TEMPLATE_' + org, '');
+    return;
+  }
+  google.script.run
+    .withSuccessHandler(function(result) {
+      showToast(result.message, result.success ? 'success' : 'error');
+      if (result.success) _evalTemplates = null;
+    })
+    .withFailureHandler(function(err) {
+      showToast('저장 실패: ' + err.message, 'error');
+    })
+    .saveEvalTemplate(org, value);
+}
+
+function saveSetting(key) {
+  var el = document.getElementById('setting_' + key);
+  if (!el) return;
+  google.script.run
+    .withSuccessHandler(function(result) {
+      showToast(result.message, result.success ? 'success' : 'error');
+    })
+    .updateSetting(key, el.value);
+}
+
+function openAddAdminModal() {
+  var html = '<div style="padding:20px;">' +
+    '<div class="form-group"><label>이메일 (@zsoo.kr)</label><input type="email" id="newAdminEmail" placeholder="example@zsoo.kr"></div>' +
+    '<div class="form-group"><label>이름</label><input type="text" id="newAdminName" placeholder="홍길동"></div>' +
+    '<div class="form-group"><label>역할</label><select id="newAdminRole">' +
+    '<option value="직원">직원</option><option value="조직관리자">조직관리자</option>' +
+    '<option value="총괄관리자">총괄관리자</option><option value="최고관리자">최고관리자</option></select></div>' +
+    '<div class="form-group"><label>담당 조직 (복수: 쉼표 구분)</label><input type="text" id="newAdminOrg" placeholder="검토팀 또는 고객지원팀,인용확인팀"></div>' +
+    '<div style="text-align:right;margin-top:16px;">' +
+    '<button class="btn btn-outline" onclick="document.getElementById(\'adminAddDialog\').remove();">취소</button> ' +
+    '<button class="btn btn-primary" onclick="submitAddAdmin()">추가</button></div></div>';
+
+  var overlay = document.createElement('div');
+  overlay.id = 'adminAddDialog';
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'flex';
+  overlay.innerHTML = '<div class="modal" style="max-width:400px;"><div class="modal-header"><h3>관리자 추가</h3><button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove();">&times;</button></div><div class="modal-body">' + html + '</div></div>';
+  document.body.appendChild(overlay);
+}
+
+function submitAddAdmin() {
+  var data = {
+    email: document.getElementById('newAdminEmail').value.trim(),
+    name: document.getElementById('newAdminName').value.trim(),
+    role: document.getElementById('newAdminRole').value,
+    org: document.getElementById('newAdminOrg').value.trim()
+  };
+  if (!data.email) { showToast('이메일을 입력해주세요.', 'warning'); return; }
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      showToast(result.message, result.success ? 'success' : 'error');
+      if (result.success) {
+        var dialog = document.getElementById('adminAddDialog');
+        if (dialog) dialog.remove();
+        _adminList = null;
+        renderSettings();
+      }
+    })
+    .addAdmin(data);
+}
+
+function deleteAdminConfirm(email, name) {
+  if (!confirm((name || email) + ' 관리자를 삭제하시겠습니까?')) return;
+  google.script.run
+    .withSuccessHandler(function(result) {
+      showToast(result.message, result.success ? 'success' : 'error');
+      if (result.success) { _adminList = null; renderSettings(); }
+    })
+    .deleteAdmin(email);
+}
+</script>
+
+</body>
+</html>
